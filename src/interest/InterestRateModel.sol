@@ -14,7 +14,6 @@ contract InterestRateModel {
 
     error InvalidKink();
     error InvalidRateProgression();
-    error InvalidMaxRate();
 
     constructor(uint256 _baseRate, uint256 _kink, uint256 _kinkRate, uint256 _maxRate) {
         if (_kink == 0 || _kink >= WAD) {
@@ -22,9 +21,6 @@ contract InterestRateModel {
         }
         if (_kinkRate < _baseRate || _kinkRate > _maxRate) {
             revert InvalidKink();
-        }
-        if (_baseRate > _maxRate) {
-            revert InvalidMaxRate();
         }
 
         i_baseRate = _baseRate;
