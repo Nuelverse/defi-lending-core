@@ -31,7 +31,7 @@ contract InterestRateModel {
 
     function getUtilization(uint256 totalSupply, uint256 totalBorrow) public pure returns (uint256) {
         if (totalSupply == 0) {
-            revert();
+            return 0;
         }
         return (totalBorrow * WAD / totalSupply);
     }
