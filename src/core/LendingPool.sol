@@ -10,6 +10,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {RUSDC} from "../tokens/RUSDC.sol";
 import {InterestRateModel} from "../interest/InterestRateModel.sol";
 import {FixedPointMath} from "../libraries/FixedPointMath.sol";
+import {HealthLogic} from "../libraries/HealthLogic.sol";
+import {PriceOracle} from "../oracle/PriceOracle.sol";
 
 contract LendingPool is Ownable2Step, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -19,6 +21,7 @@ contract LendingPool is Ownable2Step, Pausable, ReentrancyGuard {
     IERC20 public immutable usdc;
     RUSDC public rusdc;
     InterestRateModel public immutable interestRateModel;
+    PriceOracle public immutable priceOracle;
     uint256 public reserveFactor;
     uint256 public supplyIndex;
     uint256 public borrowIndex;
@@ -33,13 +36,16 @@ contract LendingPool is Ownable2Step, Pausable, ReentrancyGuard {
     error InsufficientBalance();
     error InsufficientLiquidity();
     error InvalidReserveFactor();
+    error AssetNotEnabled();
 
     event InterestAccrued(uint256 supplyIndex, uint256 borrowIndex, uint256 timestamp);
     event Supplied(address indexed user, uint256 usdcAmount, uint256 rUSDCMinted);
     event Withdrawn(address indexed user, uint256 usdcAmount, uint256 rUSDCBurned);
 
-    constructor(address _usdc, address _interestRateModel, uint256 _reserveFactor) Ownable(msg.sender) {
-        if (_usdc == address(0) || _interestRateModel == address(0)) {
+    constructor(address _usdc, address _interestRateModel, address _priceOracle, uint256 _reserveFactor)
+        Ownable(msg.sender)
+    {
+        if (_usdc == address(0) || _interestRateModel == address(0) || _priceOracle == address(0)) {
             revert ZeroAddress();
         }
         if (_reserveFactor >= WAD) {
@@ -47,6 +53,7 @@ contract LendingPool is Ownable2Step, Pausable, ReentrancyGuard {
         }
         usdc = IERC20(_usdc);
         interestRateModel = InterestRateModel(_interestRateModel);
+        priceOracle = PriceOracle(_priceOracle);
         reserveFactor = _reserveFactor;
         supplyIndex = WAD;
         borrowIndex = WAD;
@@ -105,6 +112,13 @@ contract LendingPool is Ownable2Step, Pausable, ReentrancyGuard {
         totalSupply -= amount;
         emit Withdrawn(msg.sender, amount, rUSDCToBurn);
     }
+
+    // function depositCollateral(address asset, uint256 amount) external {
+    //     if (amount == 0) revert ZeroAmount();
+    //     if (priceOracle.priceFeeds(asset) == address(0)) revert AssetNotEnabled();
+
+    //     // Pause check to be implemented later
+    // }
 
     //// Setter Function ////////
 

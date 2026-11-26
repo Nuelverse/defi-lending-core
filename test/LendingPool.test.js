@@ -7,6 +7,7 @@ describe("LendingPool", function () {
   let rusdc;
   let usdc;
   let interestRateModel;
+  let priceOracle;
   let fixedPointMath;
   let poolAddress;
   let owner;
@@ -37,6 +38,11 @@ describe("LendingPool", function () {
     const MockERC20 = await ethers.getContractFactory("MockERC20");
     usdc = await MockERC20.deploy("USD Coin", "USDC", 6);
     const usdcAddress = await usdc.getAddress();
+
+    // Deploy Price Oracle
+    const PriceOracle = await ethers.getContractFactory("PriceOracle");
+    priceOracle = await PriceOracle.deploy();
+    const priceOracleAddress = await priceOracle.getAddress();
 
     // Mint USDC to test users
     await usdc.mint(user1.address, INITIAL_USDC_BALANCE);
@@ -73,6 +79,7 @@ describe("LendingPool", function () {
     lendingPool = await LendingPool.deploy(
       usdcAddress,
       interestRateModelAddress,
+      priceOracleAddress,
       reserveFactor,
     );
     poolAddress = await lendingPool.getAddress();
@@ -110,6 +117,7 @@ describe("LendingPool", function () {
         LendingPool.deploy(
           ethers.ZeroAddress,
           await interestRateModel.getAddress(),
+          await priceOracle.getAddress(),
           reserveFactor,
         ),
       ).to.be.revertedWithCustomError(LendingPool, "ZeroAddress");
@@ -126,6 +134,7 @@ describe("LendingPool", function () {
         LendingPool.deploy(
           await usdc.getAddress(),
           await interestRateModel.getAddress(),
+          await priceOracle.getAddress(),
           WAD, // 100% reserve factor (invalid)
         ),
       ).to.be.revertedWithCustomError(LendingPool, "InvalidReserveFactor");
