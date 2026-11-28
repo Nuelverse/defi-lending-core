@@ -101,8 +101,8 @@ describe("LendingPool", function () {
     it("should initialize with correct values", async function () {
       expect(await lendingPool.supplyIndex()).to.equal(WAD);
       expect(await lendingPool.borrowIndex()).to.equal(WAD);
-      expect(await lendingPool.totalSupply()).to.equal(0);
-      expect(await lendingPool.totalBorrow()).to.equal(0);
+      expect(await rusdc.totalSupply()).to.equal(0);
+      expect(await lendingPool.getBorrowBalanceOf(user1.address)).to.equal(0);
       expect(await lendingPool.reserveFactor()).to.equal(reserveFactor);
     });
 
@@ -152,7 +152,7 @@ describe("LendingPool", function () {
       const poolBalance = await usdc.balanceOf(poolAddress);
       expect(poolBalance).to.equal(supplyAmount);
 
-      expect(await lendingPool.totalSupply()).to.equal(supplyAmount);
+      expect(await rusdc.totalSupply()).to.equal(supplyAmount);
     });
 
     it("should revert on zero amount", async function () {
@@ -171,7 +171,7 @@ describe("LendingPool", function () {
       const supplyAmount = ethers.parseUnits("1000", 6);
       await expect(lendingPool.connect(user1).supply(supplyAmount)).to.emit(
         lendingPool,
-        "Supplied",
+        "SupplyUSDC",
       );
     });
   });
@@ -231,7 +231,7 @@ describe("LendingPool", function () {
       const withdrawAmount = ethers.parseUnits("5000", 6);
       await expect(lendingPool.connect(user1).withdraw(withdrawAmount)).to.emit(
         lendingPool,
-        "Withdrawn",
+        "WithdrawUSDC",
       );
     });
   });
